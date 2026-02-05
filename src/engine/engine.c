@@ -3,13 +3,13 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-#include "render.h"
+#include "../render/render.h"
 
 void engine_init() {
-    SDL_Init(SDL_INIT_VIDEO);
-    TTF_Init();
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) exit(1);
+    if (TTF_Init() != 0) exit(1);
 
-    initRenderer();
+    initRenderer("Game");
     SDL_StartTextInput();
 }
 

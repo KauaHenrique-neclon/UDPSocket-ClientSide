@@ -3,9 +3,9 @@
 #include <SDL_ttf.h>
 #include <string.h>
 
-#include "../../render/game_state.h"
-#include "../../render/render_text.h"
-#include "../../render/screen.h"
+#include "../../game/game_state.h"
+#include "../../render/render_objects.h"
+#include "../screen.h"
 
 static struct {
     char username[64];
@@ -18,9 +18,11 @@ SDL_Rect buttonEnter = { 50, 130, 100, 40 };
 
 void login_init(void) {
     memset(&login, 0, sizeof(login));
-    login.font = TTF_OpenFont(
-        "../src/login/DejaVuSans-BoldOblique.ttf", 18
-    );
+    login.font = TTF_OpenFont(ASSETS_DIR "/DejaVuSans-BoldOblique.ttf", 18);
+    if (!login.font) {
+        printf("Font error: %s\n", TTF_GetError());
+        exit(1);
+    }
 }
 
 void login_handle_event(SDL_Event *e) {

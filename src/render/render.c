@@ -1,8 +1,5 @@
-//
-// Created by guilherme on 2/1/26.
-//
+#include "../render/render.h"
 
-#include "../engine/render.h"
 SDL_Window* window;
 SDL_Renderer* renderer;
 
@@ -23,15 +20,15 @@ void initRenderer(char* title) {
     }
 }
 
-void destroyRenderer() {
+void destroyRenderer(void) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 }
 
-SDL_Window* getWindow() {
+SDL_Window* getWindow(void) {
     return window;
 }
 
-SDL_Renderer* getRenderer() {
+SDL_Renderer* getRenderer(void) {
     return renderer;
 }

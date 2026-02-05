@@ -1,9 +1,9 @@
-#include "../engine/screen.h"
+#include "../screens/screen.h"
 
 #include "game/game.h"
 #include "login/login.h"
 
-static ScreenType current;
+static ScreenType current = SCREEN_LOGIN;
 
 void change_screen(ScreenType next) {
     if (current == SCREEN_LOGIN)

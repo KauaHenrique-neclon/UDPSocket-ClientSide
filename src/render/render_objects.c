@@ -1,6 +1,6 @@
-#include "../engine/render_text.h"
+#include "../render/render_objects.h"
 
-#include "../engine/render.h"
+#include "render.h"
 
 void drawText(
     TTF_Font *font,
@@ -28,11 +28,6 @@ void draw_rect(const SDL_Rect *rect, SDL_Color color) {
 }
 
 void fill_rect(const SDL_Rect *rect, SDL_Color color) {
-    SDL_SetRenderDrawColor(getRenderer(), color.r, color.g, color.b, color.a);
-    SDL_RenderFillRect(getRenderer(), rect);
-}
-
-void draw_filled_rect(const SDL_Rect *rect, SDL_Color color) {
     SDL_SetRenderDrawColor(getRenderer(), color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(getRenderer(), rect);
 }
