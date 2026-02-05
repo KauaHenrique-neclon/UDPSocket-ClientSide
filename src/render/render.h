@@ -6,6 +6,7 @@
 #define UDPSOCKETCLIENT_RENDER_H
 
 void initRenderer();
+void destroyRenderer();
 SDL_Window* getWindow();
 SDL_Renderer* getRenderer();
 
