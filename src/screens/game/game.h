@@ -1,9 +1,11 @@
 #ifndef UDPSOCKETCLIENT_GAME_H
 #define UDPSOCKETCLIENT_GAME_H
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
-#include "../../net/net.h"
-#include "../../render/render_objects.h"
-#include <SDL_events.h>
+
+#define WIDTH_TILES 50
+#define HEIGHT_TILES 36
 
 void game_init(void);
 void game_handle_event(SDL_Event *e);

@@ -4,6 +4,7 @@
 
 #include "../protocol/protocol.h"
 #include <fcntl.h>
+#include <SDL_timer.h>
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -18,7 +19,7 @@ socklen_t addr_len;
 
 Player players[MAX_PLAYERS];
 
-int porta = 8888;
+int user_id = 0;
 
 void socket_init() {
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -29,44 +30,20 @@ void socket_init() {
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     addr_len = sizeof(server_addr);
+
+    last_pong_received = SDL_GetTicks();
 }
 
-// enviar os dados do long para o server, espera um retorno com ID
-int send_login(char *email, char *password) {
+void send_login() {
+    PacketLogin pkt;
+    memset(&pkt, 0, sizeof(pkt));
 
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(porta);
-    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
-    char msg[256];
-    snprintf(msg, sizeof(msg), "LOGIN|01|%s|%s", email, password);
-    if (sendto(sock, msg, strlen(msg), 0,(struct sockaddr*)&server_addr, addr_len) < 0) {
-        perror("sendto");
-        return; // retorna nada
-    }
-    char bufferID[256];
-    ssize_t response = recvfrom(sock, bufferID, sizeof(bufferID) - 1, 0,
-                         (struct sockaddr*)&server_addr, &addr_len);
-    if (response < 0) {perror("recvfrom");
-        return; // retorna nada
-    }
-    bufferID[response] = '\0';
-    int id_user;
-    char username[100];
-    if (sscanf(bufferID, "%d|%99s", &id_user, username) != 2) {
-        fprintf(stderr, "Erro ao ler resposta do servidor\n");
-        return -1;
-    }
-    if (id_user <= 0) {
-        return -1;
-    }
-    Usuario user;
-    user->id = id_user;
-    user->name = username;
-    close(sock);
-    return user_id; // retorna um id
+    pkt.type = PKT_LOGIN;
+    strncpy(pkt.username, "guilherme", 15);
+
+    sendto(sock, &pkt, sizeof(pkt), 0,
+           (struct sockaddr*)&server_addr, addr_len);
 }
-
 
 void send_input(int dx, int dy) {
     PacketInput pkt;
@@ -74,8 +51,7 @@ void send_input(int dx, int dy) {
     pkt.dx = dx;
     pkt.dy = dy;
 
-    sendto(sock, &pkt, sizeof(pkt), 0,
-           (struct sockaddr*)&server_addr, addr_len);
+    net_send(&pkt, sizeof(pkt));
 }
 
 void send_logout() {
@@ -83,7 +59,19 @@ void send_logout() {
     pkt.type = PKT_LOGOUT;
     pkt.id = user_id;
 
-    sendto(sock, &pkt, sizeof(pkt), 0, (struct sockaddr*)&server_addr, addr_len);
+    net_send(&pkt, sizeof(pkt));
+}
+
+void send_ping(uint32_t now) {
+    PacketPing pkt;
+    pkt.type = PKT_PING;
+    pkt.timestamp = now;
+
+    net_send(&pkt, sizeof(pkt));
+}
+
+void net_send(void *data, size_t size) {
+    sendto(sock, data, size, 0, (struct sockaddr*)&server_addr, addr_len);
 }
 
 void handle_state_packet(PacketState* pkt) {
@@ -105,6 +93,24 @@ void handle_state_packet(PacketState* pkt) {
             return;
         }
     }
+
+}
+
+int net_update(void) {
+    uint32_t now = SDL_GetTicks();
+
+    if (now - last_ping_sent > 1000) {
+        send_ping(now);
+        last_ping_sent = now;
+    }
+    receive_packets();
+
+    if (SDL_GetTicks() - last_pong_received > 5000) {
+        send_logout();
+        return -1;
+    }
+
+    return 0;
 
 }
 
@@ -146,6 +152,13 @@ void receive_packets() {
                     break;
                 }
             }
+        }else if (hdr->type == PKT_PONG) {
+            PacketPong* pkt = (PacketPong*)buffer;
+
+            uint32_t ping = SDL_GetTicks() - pkt->timestamp;
+            last_pong_received = SDL_GetTicks();
+
+            printf("Ping: %u ms\n", ping);
         }
     }
 }

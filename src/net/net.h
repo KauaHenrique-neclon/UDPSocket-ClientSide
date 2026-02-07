@@ -2,7 +2,8 @@
 #define UDPSOCKETCLIENT_NET_H
 
 #define MAX_PLAYERS 1024
-#include "../game/game_state.h"
+#include <stddef.h>
+#include <stdint.h>
 
 typedef struct {
     int active;
@@ -20,4 +21,7 @@ void send_login(char *email, char *password);
 void send_input(int dx, int dy);
 void receive_packets();
 void send_logout();
+void net_send(void *data, size_t size);
+void send_ping(uint32_t now);
+int net_update(void);
 #endif //UDPSOCKETCLIENT_NET_H
