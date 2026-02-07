@@ -13,6 +13,8 @@
 
 
 int porta = 8080;
+
+int porta = 8080;
 int sock;
 struct sockaddr_in server_addr;
 socklen_t addr_len;
@@ -34,16 +36,42 @@ void socket_init() {
     last_pong_received = SDL_GetTicks();
 }
 
-void send_login() {
-    PacketLogin pkt;
-    memset(&pkt, 0, sizeof(pkt));
+// enviar os dados do long para o server, espera um retorno com ID
+int send_login(char *email, char *password) {
 
-    pkt.type = PKT_LOGIN;
-    strncpy(pkt.username, "guilherme", 15);
-
-    sendto(sock, &pkt, sizeof(pkt), 0,
-           (struct sockaddr*)&server_addr, addr_len);
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(porta);
+    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+    char msg[256];
+    snprintf(msg, sizeof(msg), "LOGIN|01|%s|%s", email, password);
+    if (sendto(sock, msg, strlen(msg), 0,(struct sockaddr*)&server_addr, addr_len) < 0) {
+        perror("sendto");
+        return; // retorna nada
+    }
+    char bufferID[256];
+    ssize_t response = recvfrom(sock, bufferID, sizeof(bufferID) - 1, 0,
+                         (struct sockaddr*)&server_addr, &addr_len);
+    if (response < 0) {perror("recvfrom");
+        return; // retorna nada
+    }
+    bufferID[response] = '\0';
+    int id_user;
+    char username[100];
+    if (sscanf(bufferID, "%d|%99s", &id_user, username) != 2) {
+        fprintf(stderr, "Erro ao ler resposta do servidor\n");
+        return -1;
+    }
+    if (id_user <= 0) {
+        return -1;
+    }
+    Usuario user;
+    user->id = id_user;
+    user->name = username;
+    close(sock);
+    return user_id; // retorna um id
 }
+
 
 void send_input(int dx, int dy) {
     PacketInput pkt;

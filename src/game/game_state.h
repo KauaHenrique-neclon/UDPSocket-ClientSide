@@ -7,6 +7,7 @@ typedef struct {
     char name[64];
 } Usuario;
 
+
 void set_username(const char *name);
 const char *get_username(void);
 

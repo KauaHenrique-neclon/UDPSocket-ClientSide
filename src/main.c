@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 
+
 float player_x = 100;
 float player_y = 100;
 
