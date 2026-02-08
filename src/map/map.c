@@ -1,7 +1,4 @@
 #include "map.h"
-
-#include <SDL_image.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include "map_loader.h"
@@ -85,84 +82,15 @@ Map* load_map(const char* path)
     return map;
 }
 
-
-Texture loadTexture(const char* image)
+void map_destroy(Map* map)
 {
-    char path[256];
-    snprintf(path, sizeof(path), "%s%s", ASSETS_DIR, image);
+    if (!map) return;
 
-    SDL_Surface* surface = IMG_Load(path);
-    if (!surface) {
-        printf("IMG_Load Error: %s\n", IMG_GetError());
-        exit(1);
+    for (int i = 0; i < map->layersCount; i++) {
+        free(map->layers[i].tiles);
     }
 
-    int imageWidth = surface->w;
-    int columnsNumber = imageWidth / TILE_SIZE;
-
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(getRenderer(), surface);
-    if (!texture) {
-        printf("SDL_CreateTextureFromSurface Error: %s\n", SDL_GetError());
-        exit(1);
-    }
-    return (Texture){texture, columnsNumber};
-
-
-}
-
-AnimationSet* loadAnimations(const char* path)
-{
-    FILE* f = fopen(path, "rb");
-    if (!f) return NULL;
-
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    char* data = malloc(size + 1);
-    fread(data, 1, size, f);
-    data[size] = 0;
-    fclose(f);
-
-    cJSON* root = cJSON_Parse(data);
-    free(data);
-    if (!root) return NULL;
-
-    int animCount = cJSON_GetArraySize(root);
-    AnimationSet* set = malloc(sizeof(AnimationSet));
-    set->animationCount = animCount;
-    set->animations = malloc(sizeof(Animation) * animCount);
-
-    for (int i = 0; i < animCount; i++) {
-        cJSON* animObj = cJSON_GetArrayItem(root, i);
-        cJSON* nameObj = cJSON_GetObjectItem(animObj, "NomeAnimacao");
-        cJSON* frameCountObj = cJSON_GetObjectItem(animObj, "QtdSprites");
-        cJSON* framesArr = cJSON_GetObjectItem(animObj, "frames");
-
-        Animation* anim = &set->animations[i];
-        anim->name = strdup(nameObj->valuestring);
-        anim->frameCount = frameCountObj->valueint;
-        anim->frames = malloc(sizeof(Frame) * anim->frameCount);
-
-        for (int j = 0; j < anim->frameCount; j++) {
-            cJSON* fObj = cJSON_GetArrayItem(framesArr, j);
-            anim->frames[j].offset_x = cJSON_GetObjectItem(fObj, "offset_x")->valueint;
-            anim->frames[j].offset_y = cJSON_GetObjectItem(fObj, "offset_y")->valueint;
-            anim->frames[j].width    = cJSON_GetObjectItem(fObj, "width")->valueint;
-            anim->frames[j].height   = cJSON_GetObjectItem(fObj, "height")->valueint;
-        }
-    }
-
-    cJSON_Delete(root);
-    return set;
-}
-
-
-Animation* getAnimation(AnimationSet* set, const char* name)
-{
-    for (int i = 0; i < set->animationCount; i++) {
-        if (strcmp(set->animations[i].name, name) == 0)
-            return &set->animations[i];
-    }
-    return NULL;
+    free(map->layers);
+    free(map->tilesets);
+    free(map);
 }

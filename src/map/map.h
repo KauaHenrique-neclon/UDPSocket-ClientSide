@@ -35,31 +35,7 @@ typedef struct {
     const char* image;
 } TilesetMapEntry;
 
-
-typedef struct {
-    int offset_x;
-    int offset_y;
-    int width;
-    int height;
-} Frame;
-
-typedef struct {
-    char* name;
-    int frameCount;
-    int lastFrame;
-    Frame* frames;
-    double delay;
-    Uint32 lastTick;
-} Animation;
-
-typedef struct {
-    int animationCount;
-    Animation* animations;
-} AnimationSet;
-
 Map* load_map(const char* path);
-Texture loadTexture(const char* image);
-Texture loadTexture(const char* image);
-AnimationSet* loadAnimations(const char* path);
-Animation* getAnimation(AnimationSet* set, const char* name);
+void map_destroy(Map* map);
+
 #endif //UDPSOCKETCLIENT_MAP_H

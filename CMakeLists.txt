@@ -34,6 +34,14 @@ add_executable(UDPSocketClient
         src/map/map.h
         src/map/map_loader.c
         src/map/map_loader.h
+        src/graphics/texture.c
+        src/graphics/texture.h
+        src/animation/animation.c
+        src/animation/animation.h
+        src/render/map_render.c
+        src/render/map_render.h
+        src/graphics/sprite.c
+        src/graphics/sprite.h
 )
 
 target_include_directories(UDPSocketClient PRIVATE
@@ -49,5 +57,5 @@ target_link_libraries(UDPSocketClient PRIVATE
         ${CJSON_LIBRARIES}
         m
 )
-add_compile_definitions(ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
+#add_compile_definitions(ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets")
 

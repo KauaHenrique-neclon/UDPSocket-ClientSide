@@ -6,6 +6,7 @@
 #include "../../game/game_state.h"
 #include "../../render/render_objects.h"
 #include "../screen.h"
+#include "../../config/config.h"
 
 static struct {
     char username[64];

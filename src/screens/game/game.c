@@ -1,25 +1,19 @@
 #include "game.h"
 #include "../../net/net.h"
-#include "../../render/render_objects.h"
 #include "../screen.h"
 #include "../../map/map.h"
 #include "../../render/render.h"
-#include "../../render/tilemap.h"
+#include "../../graphics/texture.h"
+#include "../../render/map_render.h"
+#include "../../animation/animation.h"
+#include "../../config/config.h"
+
 
 Texture* textures;
 Map* map;
 SDL_Texture* playerTexture;
 AnimationSet* playerSet;
 Animation* playerIdle;
-
-Texture* getTextureForTile(int tileId) {
-    for (int i = map->tilesetCount - 1; i >= 0; i--) {
-        if (tileId >= map->tilesets[i].first_grid) {
-            return &textures[i];
-        }
-    }
-    return NULL;
-}
 
 void game_init(void) {
     socket_init();
@@ -30,7 +24,7 @@ void game_init(void) {
     textures = malloc(sizeof(Texture) * map->tilesetCount);
 
     for (int i = 0; i < map->tilesetCount; i++) {
-        textures[i] = loadTexture(map->tilesets[i].image);
+        textures[i] = texture_load(map->tilesets[i].image);
     }
 
     SDL_Surface* playerSurface = IMG_Load(ASSETS_DIR "/tilesets/player.png");
@@ -43,6 +37,7 @@ void game_init(void) {
         printf("SDL_CreateTextureFromSurface Error: %s\n", SDL_GetError());
         exit(1);
     }
+    SDL_FreeSurface(playerSurface);
 
     playerSet = loadAnimations(ASSETS_DIR "/data/animations/player.json");
 
@@ -74,24 +69,7 @@ void game_update(void) {
 
 void game_render(void) {
 
-    for (int l = 0; l < map->layersCount; l++) {
-        for (int y = 0; y < HEIGHT_TILES; y++) {
-            for (int x = 0; x < WIDTH_TILES; x++) {
-                int tileIndex = y * map->width + x;
-                int tileId = map->layers[l].tiles[tileIndex];
-
-                if (tileId == 0) continue;
-
-                Texture* tex = getTextureForTile(tileId);
-                if (!tex) continue;
-
-                int localTileId = tileId - map->tilesets[tex - textures].first_grid + 1;
-
-                drawTile(localTileId, x, y, *tex);
-
-            }
-        }
-    }
+    map_render(map, textures);
 
 
     SDL_Color c;
@@ -130,5 +108,15 @@ void game_render(void) {
 }
 
 void game_shutdown(void) {
+    for (int i = 0; i < map->tilesetCount; i++)
+        texture_destroy(&textures[i]);
 
+    free(textures);
+
+    SDL_DestroyTexture(playerTexture);
+
+    animation_set_destroy(playerSet);
+    map_destroy(map);
+
+    send_logout();
 }
